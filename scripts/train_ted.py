@@ -18,7 +18,7 @@ import utils.train_utils
 
 matplotlib.use('Agg')  # we don't use interactive GUI
 [sys.path.append(i) for i in ['.', '..']]
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
 
 
 def init_model(args, _device):
