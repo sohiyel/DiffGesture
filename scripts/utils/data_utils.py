@@ -6,7 +6,7 @@ import torch
 from scipy.interpolate import interp1d
 from sklearn.preprocessing import normalize
 
-device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 skeleton_line_pairs = [(0, 1, 'b'), (1, 2, 'darkred'), (2, 3, 'r'), (3, 4, 'orange'), (1, 5, 'darkgreen'),

@@ -23,7 +23,7 @@ from utils.average_meter import AverageMeter
 from utils.data_utils import convert_dir_vec_to_pose, convert_pose_seq_to_dir_vec, resample_pose_seq, dir_vec_pairs
 from utils.train_utils import set_logger, set_random_seed
 
-device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 angle_pair = [
     (3, 4),

@@ -6,7 +6,7 @@ import torch
 from scipy.interpolate import interp1d
 from sklearn.preprocessing import normalize
 
-device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 dir_vec_pairs = [
     (0, 1, 0.26), # 0, spine-neck
