@@ -179,9 +179,12 @@ class SpeechMotionDataset(Dataset):
         txn = lmdb_env.begin(write=False)
         cursor = txn.cursor()
         for key, value in cursor:
-            video = pyarrow.deserialize(value)
-            vid = video['vid']
-            speaker_model.index_word(vid)
+            try:
+                video = pyarrow.deserialize(value)
+                vid = video['vid']
+                speaker_model.index_word(vid)
+            except:
+                continue
 
         lmdb_env.close()
         logging.info('    indexed %d videos' % speaker_model.n_words)

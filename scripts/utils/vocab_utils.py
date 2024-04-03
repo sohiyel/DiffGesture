@@ -41,12 +41,15 @@ def index_words(lang_model, lmdb_dir):
     cursor = txn.cursor()
 
     for key, buf in cursor:
-        video = pyarrow.deserialize(buf)
+        try:
+            video = pyarrow.deserialize(buf)
 
-        for clip in video['clips']:
-            for word_info in clip['words']:
-                word = word_info[0]
-                lang_model.index_word(word)
+            for clip in video['clips']:
+                for word_info in clip['words']:
+                    word = word_info[0]
+                    lang_model.index_word(word)
+        except:
+            continue
 
     lmdb_env.close()
     logging.info('    indexed %d words' % lang_model.n_words)

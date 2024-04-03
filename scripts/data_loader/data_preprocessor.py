@@ -40,13 +40,16 @@ class DataPreprocessor:
         # sampling and normalization
         cursor = src_txn.cursor()
         for key, value in cursor:
-            video = pyarrow.deserialize(value)
-            vid = video['vid']
-            clips = video['clips']
-            for clip_idx, clip in enumerate(clips):
-                filtered_result = self._sample_from_clip(vid, clip)
-                for type in filtered_result.keys():
-                    n_filtered_out[type] += filtered_result[type]
+            try:
+                video = pyarrow.deserialize(value)
+                vid = video['vid']
+                clips = video['clips']
+                for clip_idx, clip in enumerate(clips):
+                    filtered_result = self._sample_from_clip(vid, clip)
+                    for type in filtered_result.keys():
+                        n_filtered_out[type] += filtered_result[type]
+            except:
+                continue
 
         # print stats
         with self.dst_lmdb_env.begin() as txn:
