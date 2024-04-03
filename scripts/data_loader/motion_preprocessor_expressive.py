@@ -2,16 +2,17 @@ import numpy as np
 
 
 class MotionPreprocessor:
-    def __init__(self, skeletons, mean_pose):
+    def __init__(self, skeletons, mean_pose, filter_results = True):
         self.skeletons = np.array(skeletons)
         self.mean_pose = np.array(mean_pose).reshape(-1, 3)
         self.filtering_message = "PASS"
+        self.filter_results = filter_results
 
     def get(self):
         assert (self.skeletons is not None)
 
         # filtering
-        if self.skeletons != []:
+        if self.skeletons != [] and self.filter_results:
             if self.check_pose_diff():
                 self.skeletons = []
                 self.filtering_message = "pose"

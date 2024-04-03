@@ -91,15 +91,17 @@ class DataPreprocessor:
             (len(clip_skeleton) - self.n_poses)
             / self.subdivision_stride) + 1  # floor((K - (N+M)) / S) + 1
         expected_audio_length = utils.data_utils_aqgt.calc_spectrogram_length_from_motion_length(len(clip_skeleton), self.skeleton_resampling_fps)
-        #assert abs(expected_audio_length - clip_audio.shape[1]) <= 5, 'audio and skeleton lengths are different'
+
+        #  spectrogram data does not exist in BiGe dataset!
+        # assert abs(expected_audio_length - clip_audio.shape[1]) <= 5, 'audio and skeleton lengths are different'
 
         for i in range(num_subdivision):
             start_idx = i * self.subdivision_stride
             fin_idx = start_idx + self.n_poses
 
             sample_skeletons = clip_skeleton[start_idx:fin_idx]
-            subdivision_start_time = clip_s_t + start_idx / self.skeleton_resampling_fps
-            subdivision_end_time = clip_s_t + fin_idx / self.skeleton_resampling_fps
+            subdivision_start_time = clip_s_f + start_idx 
+            subdivision_end_time = clip_s_f + fin_idx
             sample_words = self.get_words_in_time_range(word_list=clip_word_list,
                                                         start_time=subdivision_start_time,
                                                         end_time=subdivision_end_time)
@@ -130,7 +132,7 @@ class DataPreprocessor:
 
             if len(sample_words) >= 2:
                 # filtering motion skeleton data
-                sample_skeletons, filtering_message = MotionPreprocessor(sample_skeletons, self.mean_pose).get()
+                sample_skeletons, filtering_message = MotionPreprocessor(sample_skeletons, self.mean_pose, False).get()
                 is_correct_motion = (sample_skeletons != [])
                 motion_info = {'vid': vid,
                                'start_frame_no': clip_s_f + start_idx,
@@ -142,7 +144,7 @@ class DataPreprocessor:
                 if is_correct_motion or self.disable_filtering:
                     sample_skeletons_list.append(sample_skeletons)
                     sample_words_list.append(sample_words)
-                    sample_audio_list.append(sample_audio)
+                    sample_audio_list.append( np.array( sample_audio))
                     sample_spectrogram_list.append(sample_spectrogram)
                     aux_info.append(motion_info)
                 else:
