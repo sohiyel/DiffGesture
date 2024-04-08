@@ -257,7 +257,103 @@ class ContextEncoder(nn.Module):
 
         z = reparameterize(mu, logvar)
         return z, mu, logvar
+    
+class PoseEncoderConvAQGT(nn.Module):
+    def __init__(self, length, dim):
+        super().__init__()
 
+        self.net = nn.Sequential(
+            ConvNormRelu(dim, 32, batchnorm=True),
+            ConvNormRelu(32, 64, batchnorm=True),
+            ConvNormRelu(64, 64, True, batchnorm=True),
+            nn.Conv1d(64, 32, 3)
+        )
+
+        self.out_net = nn.Sequential(
+            # nn.Linear(864, 256),  # for 64 frames
+            nn.Linear(320, 256),  # for 34 frames
+            nn.BatchNorm1d(256),
+            nn.LeakyReLU(True),
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.LeakyReLU(True),
+            nn.Linear(128, 32),
+        )
+
+        self.fc_mu = nn.Linear(32, 32)
+        self.fc_logvar = nn.Linear(32, 32)
+
+    def forward(self, poses, variational_encoding):
+        # encode
+        poses = poses.transpose(1, 2)  # to (bs, dim, seq)
+        out = self.net(poses)
+        out = out.flatten(1)
+        out = self.out_net(out)
+
+        # return out, None, None
+        mu = self.fc_mu(out)
+        logvar = self.fc_logvar(out)
+
+        if variational_encoding:
+            z = reparameterize(mu, logvar)
+        else:
+            z = mu
+        return z, mu, logvar
+    
+class PoseDecoderGRUAQGT(nn.Module):
+    def __init__(self, gen_length, pose_dim):
+        super().__init__()
+        self.gen_length = gen_length
+        self.pose_dim = pose_dim
+        self.in_size = 32 + 32
+        self.hidden_size = 300
+
+        self.pre_pose_net = nn.Sequential(
+            nn.Linear(pose_dim * 4, 32),
+            nn.BatchNorm1d(32),
+            nn.ReLU(),
+            nn.Linear(32, 32),
+        )
+        self.gru = nn.GRU(self.in_size, hidden_size=self.hidden_size, num_layers=4, batch_first=True,
+                          bidirectional=True, dropout=0.3)
+        self.out = nn.Sequential(
+            nn.Linear(self.hidden_size, self.hidden_size // 2),
+            nn.LeakyReLU(True),
+            nn.Linear(self.hidden_size // 2, pose_dim)
+        )
+
+    def forward(self, latent_code, pre_poses):
+        pre_pose_feat = self.pre_pose_net(pre_poses.reshape(pre_poses.shape[0], -1))
+        feat = torch.cat((pre_pose_feat, latent_code), dim=1)
+        feat = feat.unsqueeze(1).repeat(1, self.gen_length, 1)
+
+        output, decoder_hidden = self.gru(feat)
+        output = output[:, :, :self.hidden_size] + output[:, :, self.hidden_size:]  # sum bidirectional outputs
+        output = self.out(output.reshape(-1, output.shape[2]))
+        output = output.view(pre_poses.shape[0], self.gen_length, -1)
+
+        return output
+
+class EmbeddingNetAQGT(nn.Module):
+    def __init__(self, args, pose_dim, n_frames):
+        super().__init__()
+        # self.audio_vqvae = VQ_VAE_2_audio.load_from_checkpoint("output/vqvae_audio/val_loss=  0.011871-epoch=1.ckpt",strict=False).eval()
+        self.pose_encoder = PoseEncoderConvAQGT(n_frames, pose_dim)
+        self.decoder = PoseDecoderGRUAQGT(34, pose_dim)
+
+    def forward(self, pre_poses, poses, variational_encoding=True):
+
+        poses_feat, pose_mu, pose_logvar = self.pose_encoder(poses, variational_encoding)
+
+        out_poses = self.decoder(poses_feat, pre_poses)
+
+        return poses_feat, pose_mu, pose_logvar, out_poses
+
+    def freeze_pose_nets(self):
+        for param in self.pose_encoder.parameters():
+            param.requires_grad = False
+        for param in self.decoder.parameters():
+            param.requires_grad = False
 
 class EmbeddingNet(nn.Module):
     def __init__(self, args, pose_dim, n_frames, n_words, word_embed_size, word_embeddings, mode):

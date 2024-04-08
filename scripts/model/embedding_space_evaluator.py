@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import umap
 from scipy import linalg
 
-from model.embedding_net import EmbeddingNet
+from model.embedding_net import EmbeddingNet, EmbeddingNetAQGT
 from model.motion_ae import MotionAE
 
 import warnings
@@ -32,6 +32,10 @@ class EmbeddingSpaceEvaluator:
             self.latent_dim = ckpt['latent_dim']
             self.net = MotionAE(self.pose_dim, self.latent_dim).to(device)
             self.net.load_state_dict(ckpt['motion_ae'])
+        elif args.pose_dim == 159:
+            mode = 'pre_pose'
+            self.net = EmbeddingNetAQGT(args, self.pose_dim, n_frames).to(device)
+            self.net.load_state_dict(ckpt['gen_dict'])
 
         self.net.train(False)
 
@@ -67,6 +71,10 @@ class EmbeddingSpaceEvaluator:
         elif self.pose_dim == 126:
             real_recon, real_feat = self.net(real_poses)
             generated_recon, generated_feat = self.net(generated_poses)
+        elif self.pose_dim == 159:
+            # convert poses to latent features
+            real_feat, _, _, real_recon = self.net(real_poses[:, :self.n_pre_poses], real_poses[:,self.n_pre_poses:])
+            generated_feat, _, _, generated_recon = self.net(generated_poses[:, :self.n_pre_poses], generated_poses[:,self.n_pre_poses:])
 
         self.real_feat_list.append(real_feat.data.cpu().numpy())
         self.generated_feat_list.append(generated_feat.data.cpu().numpy())

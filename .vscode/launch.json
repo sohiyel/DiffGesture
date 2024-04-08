@@ -8,9 +8,9 @@
             "name": "Python Debugger: Current File with Arguments",
             "type": "debugpy",
             "request": "launch",
-            "program": "scripts/train_aqgt.py",
+            "program": "scripts/test_aqgt.py",
             "console": "integratedTerminal",
-            "args": "--config=config/pose_diffusion_aqgt.yml"
+            "args": "eval"
         }
     ]
 }
