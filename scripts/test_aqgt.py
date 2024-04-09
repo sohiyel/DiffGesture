@@ -143,7 +143,7 @@ def generate_gestures(args, diffusion, lang_model, audio, words, pose_dim, audio
         in_audio = torch.from_numpy(in_audio).unsqueeze(0).to(device).float()
 
         # prepare text input
-        word_seq = DataPreprocessor.get_words_in_time_range(word_list=words, start_time=start_time, end_time=end_time)
+        word_seq = DataPreprocessor.get_words_in_time_range(word_list=words, start_time=start_time * args.motion_resampling_framerate, end_time=end_time * args.motion_resampling_framerate)
         extended_word_indices = np.zeros(n_frames)  # zero is the index of padding token
         word_indices = np.zeros(len(word_seq) + 2)
         word_indices[0] = lang_model.SOS_token
@@ -404,6 +404,8 @@ def create_video_and_save(save_path, iter_idx, prefix, target, output, mean_data
                 pose = None
 
             if pose is not None:
+                if pose.shape[0] == 159:
+                    pose = np.reshape(pose, (-1,3))
                 axes[k].clear()
                 for j, pair in enumerate(dir_vec_pairs):
                     axes[k].plot([pose[pair[0], 0], pose[pair[1], 0]],
@@ -502,21 +504,21 @@ def main(mode, checkpoint_path):
         return dataset
 
     if mode == 'eval':
-        val_data_path = 'data/dataset/val'
+        test_data_path = 'data/dataset/test'
         eval_net_path = 'output/TED_AQGT_output/AE-cos1e-3/gesture_autoencoder_checkpoint_best.bin'
         embed_space_evaluator = EmbeddingSpaceEvaluator(args, eval_net_path, lang_model, device)
-        val_dataset = load_dataset(val_data_path)
-        data_loader = DataLoader(dataset=val_dataset, batch_size=args.batch_size, collate_fn=collate_fn,
+        test_dataset = load_dataset(test_data_path)
+        data_loader = DataLoader(dataset=test_dataset, batch_size=args.batch_size, collate_fn=collate_fn,
                                  shuffle=False, drop_last=True, num_workers=args.loader_workers)
-        val_dataset.set_lang_model(lang_model)
+        test_dataset.set_lang_model(lang_model)
         evaluate_testset(data_loader, diffusion, embed_space_evaluator, args, pose_dim)
     
     elif mode == 'short':
-        val_data_path = 'data/dataset/val'
-        val_dataset = load_dataset(val_data_path)
-        data_loader = DataLoader(dataset=val_dataset, batch_size=32, collate_fn=collate_fn,
+        test_data_path = 'data/dataset/test'
+        test_dataset = load_dataset(test_data_path)
+        data_loader = DataLoader(dataset=test_dataset, batch_size=32, collate_fn=collate_fn,
                                  shuffle=False, drop_last=True, num_workers=args.loader_workers)
-        val_dataset.set_lang_model(lang_model)
+        test_dataset.set_lang_model(lang_model)
         evaluate_testset_save_video(data_loader, diffusion, args, lang_model, pose_dim)
 
     elif mode == 'long':
@@ -526,7 +528,7 @@ def main(mode, checkpoint_path):
 
         # load clips and make gestures
         n_saved = 0
-        lmdb_env = lmdb.open('data/dataset/val', readonly=True, lock=False)
+        lmdb_env = lmdb.open('data/dataset/test', readonly=True, lock=False)
 
         with lmdb_env.begin(write=False) as txn:
             keys = [key for key, _ in txn.cursor()]
@@ -547,6 +549,7 @@ def main(mode, checkpoint_path):
 
                 clip_poses = clips[clip_idx]['skeletons_3d']
                 clip_audio = clips[clip_idx]['audio_raw']
+                clip_audio = np.array(clip_audio)
                 clip_words = clips[clip_idx]['words']
                 clip_time = [clips[clip_idx]['start_time'], clips[clip_idx]['end_time']]
 
@@ -554,7 +557,7 @@ def main(mode, checkpoint_path):
                                                                 args.motion_resampling_framerate)
                 target_dir_vec = convert_pose_seq_to_dir_vec(clip_poses)
                 target_dir_vec = target_dir_vec.reshape(target_dir_vec.shape[0], -1)
-                target_dir_vec -= mean_dir_vec
+                target_dir_vec -= args.mean_dir_vec
 
                 # check duration
                 clip_duration = clip_time[1] - clip_time[0]

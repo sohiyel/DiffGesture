@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "scripts/test_aqgt.py",
             "console": "integratedTerminal",
-            "args": "eval"
+            "args": "long"
         }
     ]
 }
