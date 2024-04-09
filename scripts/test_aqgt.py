@@ -407,10 +407,22 @@ def create_video_and_save(save_path, iter_idx, prefix, target, output, mean_data
                 if pose.shape[0] == 159:
                     pose = np.reshape(pose, (-1,3))
                 axes[k].clear()
-                for j, pair in enumerate(dir_vec_pairs):
-                    axes[k].plot([pose[pair[0], 0], pose[pair[1], 0]],
-                                 [pose[pair[0], 2], pose[pair[1], 2]],
-                                 [pose[pair[0], 1], pose[pair[1], 1]],
+                ubs = 6
+
+                skeleton_parents = np.asarray(
+                    [-1, 0, 7 - ubs, 8 - ubs, 9 - ubs, 8 - ubs, 11 - ubs, 12 - ubs, 8 - ubs, 14 - ubs, 15 - ubs])
+                hand_parents_l = np.asarray([-4, -4, 1, 2, 3, -4, 5, 6, 7, -4, 9, 10, 11, -4, 13, 14, 15, -4, 17, 18, 19])
+                hand_parents_r = np.asarray([-22, -22, 1, 2, 3, -22, 5, 6, 7, -22, 9, 10, 11, -22, 13, 14, 15, -22, 17, 18, 19])
+                hand_parents_l = hand_parents_l + 17 - ubs
+                hand_parents_r = hand_parents_r + 17 + 21 - ubs
+
+                skeleton_parents = np.concatenate((skeleton_parents, hand_parents_l, hand_parents_r), axis=0)
+                for j, j_parent in enumerate(skeleton_parents):
+                    if j_parent == -1:
+                        continue
+                    axes[k].plot([pose[j, 0], pose[j_parent, 0]],
+                                 [pose[j, 2], pose[j_parent, 2]],
+                                 [pose[j, 1], pose[j_parent, 1]],
                                  zdir='z', linewidth=1.5)
                 axes[k].set_xlim3d(-0.5, 0.5)
                 axes[k].set_ylim3d(0.5, -0.5)
