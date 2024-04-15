@@ -69,7 +69,7 @@ class MotionPreprocessor:
 
         angles = []
         for i in range(self.skeletons.shape[0]):
-            spine_vec = self.skeletons[i, 1] - self.skeletons[i, 0]
+            spine_vec = self.skeletons[i, 2] - self.skeletons[i, 0]
             angle = angle_between(spine_vec, [0, -1, 0])
             angles.append(angle)
 
