@@ -30,23 +30,20 @@ class MotionPreprocessor:
         return self.skeletons, self.filtering_message
 
     def check_static_motion(self, verbose=False):
-        def get_variance(skeleton, joint_idx):
-            wrist_pos = skeleton[:, joint_idx]
-            variance = np.sum(np.var(wrist_pos, axis=0))
+        def get_variance(skeleton):
+            variance = np.median(np.var(skeleton.flatten()))
             return variance
 
-        left_arm_var = get_variance(self.skeletons, 6)
-        right_arm_var = get_variance(self.skeletons, 7)
+        body_var = get_variance(self.skeletons)
 
-        th = 0.0014  # exclude 13110
-        # th = 0.002  # exclude 16905
-        if left_arm_var < th and right_arm_var < th:
+        th = 0.002
+        if body_var < th:
             if verbose:
-                print('skip - check_static_motion left var {}, right var {}'.format(left_arm_var, right_arm_var))
+                print('skip - check_static_motion body var {}'.format(body_var))
             return True
         else:
             if verbose:
-                print('pass - check_static_motion left var {}, right var {}'.format(left_arm_var, right_arm_var))
+                print('pass - check_static_motion body var {}'.format(body_var))
             return False
 
     def check_pose_diff(self, verbose=False):

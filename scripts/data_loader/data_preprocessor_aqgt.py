@@ -10,7 +10,9 @@ import tqdm
 from sklearn.preprocessing import normalize
 
 import utils.data_utils_aqgt
-from data_loader.motion_preprocessor_expressive import MotionPreprocessor
+from data_loader.motion_preprocessor_aqgt import MotionPreprocessor
+
+import lz4.frame
 
 
 class DataPreprocessor:
@@ -51,7 +53,8 @@ class DataPreprocessor:
                     filtered_result = self._sample_from_clip(vid, clip)
                     for type in filtered_result.keys():
                         n_filtered_out[type] += filtered_result[type]
-            except:
+            except Exception as e:
+                print(e)
                 continue
 
         # print stats
@@ -135,7 +138,7 @@ class DataPreprocessor:
 
             if len(sample_words) >= 2:
                 # filtering motion skeleton data
-                sample_skeletons, filtering_message = MotionPreprocessor(sample_skeletons, self.mean_pose, False).get()
+                sample_skeletons, filtering_message = MotionPreprocessor(sample_skeletons, self.mean_pose).get()
                 is_correct_motion = (sample_skeletons != [])
                 motion_info = {'vid': vid,
                                'start_frame_no': clip_s_f + start_idx,
@@ -165,8 +168,8 @@ class DataPreprocessor:
 
                     # save
                     k = '{:010}'.format(self.n_out_samples).encode('ascii')
-                    v = [words, poses, normalized_dir_vec, audio, spectrogram, aux]
-                    v = pyarrow.serialize(v).to_buffer()
+                    v = [poses, normalized_dir_vec, audio, spectrogram]
+                    v = lz4.frame.compress(pyarrow.serialize(v).to_buffer())
                     txn.put(k, v)
                     self.n_out_samples += 1
 
