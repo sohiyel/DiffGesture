@@ -183,7 +183,8 @@ class SpeechMotionDataset(Dataset):
                 video = pyarrow.deserialize(value)
                 vid = video['vid']
                 speaker_model.index_word(vid)
-            except:
+            except Exception as e:
+                print('Error in make speaker model', e)
                 continue
 
         lmdb_env.close()

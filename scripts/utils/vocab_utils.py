@@ -48,7 +48,8 @@ def index_words(lang_model, lmdb_dir):
                 for word_info in clip['words']:
                     word = word_info[0]
                     lang_model.index_word(word)
-        except:
+        except Exception as e:
+            print('Error in index words', e)
             continue
 
     lmdb_env.close()

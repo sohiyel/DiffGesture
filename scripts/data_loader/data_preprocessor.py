@@ -48,7 +48,8 @@ class DataPreprocessor:
                     filtered_result = self._sample_from_clip(vid, clip)
                     for type in filtered_result.keys():
                         n_filtered_out[type] += filtered_result[type]
-            except:
+            except Exception as e:
+                print('Error in DataPreprocessor run', e )
                 continue
 
         # print stats
