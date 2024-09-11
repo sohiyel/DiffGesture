@@ -1,6 +1,7 @@
-# Taming Diffusion Models for Audio-Driven Co-Speech Gesture Generation (CVPR 2023)
+I added support for the AQGT dataset to the implementation of the **Taming Diffusion Models for Audio-Driven Co-Speech Gesture Generation (CVPR 2023)** paper.
 
-This is the official code for [**Taming Diffusion Models for Audio-Driven Co-Speech Gesture Generation**](https://arxiv.org/abs/2303.09119).
+[**Paper**](https://arxiv.org/abs/2303.09119).
+[**Official implementation**](https://github.com/Advocate99/DiffGesture).
 
 ## Abstract
 
@@ -24,9 +25,13 @@ Animating virtual avatars to make co-speech gestures facilitates various applica
 
     For the TED Expressive Dataset, the pretrained Auto-Encoder model is provided [here](https://mycuhk-my.sharepoint.com/:u:/g/personal/1155165198_link_cuhk_edu_hk/EWbBxUeuIHFDnBUgZFMCq1oBdiZSw6pOlmVxC8d9xS3HOg?e=IT1AoC).
 
-    Save the models in `output/train_h36m_gesture_autoencoder/gesture_autoencoder_checkpoint_best.bin` for TED Gesture, and `output/TED_Expressive_output/AE-cos1e-3/checkpoint_best.bin` for TED Expressive.
+    For the AQGT Dataset, the pretrained Auto-Encoder model is provided [here](https://uni-bielefeld.sciebo.de/s/5tajMJrH5nPh8oD)
+    The password for all files is: AJnbyQsn2xVkEcYrmnEfHRK3WuRoL2
 
-4. Refer to [HA2G](https://github.com/alvinliu0/HA2G) to download the two datasets.
+    Save the models in `output/train_h36m_gesture_autoencoder/gesture_autoencoder_checkpoint_best.bin` for TED Gesture, `output/TED_Expressive_output/AE-cos1e-3/checkpoint_best.bin` for TED Expressive, and `output/train_h36m_gesture_autoencoder/gesture_autoencoder_checkpoint_best.bin` for AQGT.
+
+4. Refer to [HA2G](https://github.com/alvinliu0/HA2G) to download the TED Gesture and TED Expressive datasets.
+And, refer to [AQGT](https://github.com/hvoss-techfak/AQGT) to download the AQGT dataset.
 
 5. The pretrained models can be found [here](https://connecthkuhk-my.sharepoint.com/:u:/g/personal/ltzhu99_connect_hku_hk/EVE9MqI18k5FmsavVFESaVAB2lrv5e1CiHhr20xW2Vd5cA?e=eU6e4t).
 
@@ -37,6 +42,7 @@ While the test metrics may vary slightly, overall, the training procedure with t
 ```
 python scripts/train_ted.py --config=config/pose_diffusion_ted.yml
 python scripts/train_expressive.py --config=config/pose_diffusion_expressive.yml
+python scripts/train_aqgt.py --config=config/pose_diffusion_aqgt.yml
 ```
 
 ## Inference
@@ -44,19 +50,22 @@ python scripts/train_expressive.py --config=config/pose_diffusion_expressive.yml
 # synthesize short videos
 python scripts/test_ted.py short
 python scripts/test_expressive.py short
+python scripts/test_aqgt.py short
 
 # synthesize long videos
 python scripts/test_ted.py long
 python scripts/test_expressive.py long
+python scripts/test_aqgt.py long
 
 # metrics evaluation
 python scripts/test_ted.py eval
 python scripts/test_expressive.py eval
+python scripts/test_aqgt.py eval
 ```
 
 ## Citation
 
-If you find our work useful, please kindly cite as:
+If you find their work useful, please kindly cite as:
 ```
 @inproceedings{zhu2023taming,
   title={Taming Diffusion Models for Audio-Driven Co-Speech Gesture Generation},
@@ -69,7 +78,7 @@ If you find our work useful, please kindly cite as:
 ```
 
 ## Related Links
-If you are interested in **Audio-Driven Co-Speech Gesture Generation**, we would also like to recommend you to check out our other related works:
+If you are interested in **Audio-Driven Co-Speech Gesture Generation**, we would also like to recommend you to check out their other related works:
 
 * Hierarchical Audio-to-Gesture, [HA2G](https://alvinliu0.github.io/projects/HA2G).
 
